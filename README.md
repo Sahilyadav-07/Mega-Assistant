@@ -64,7 +64,7 @@ To test the Voice Assistant Project, follow these steps:
 📸 Screenshots
 ---------------
 Screenshot of the GUI -![Mega_GUI](screenshot/Mega_GUI.png)
-Screenshot of the virtual assistant in action - ![Mega_in_action](screenshots/Mega_in_action.png)
+Screenshot of the virtual assistant in action -![Mega_in_action](screenshot/Mega_in_action.png)
 
 📦 API Reference
 ----------------
