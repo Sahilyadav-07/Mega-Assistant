@@ -5,30 +5,21 @@ from rapidfuzz import process
 import customtkinter as ctk
 from datetime import datetime
 import time
-from PIL import Image  # <-- NEW for loading logo image
+from PIL import Image  
 import os
 import webbrowser
 import pygetwindow as gw
 
-# ---------- APP & THEME ----------
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 def open_youtube():
-    """
-    Open YouTube in the installed YouTube app if available,
-    otherwise in the system default browser.
-    """
     try:
-        # This will invoke the system's default handler (browser or app)
         os.system('start "" "https://www.youtube.com"')
     except Exception:
-        # Fallback to Python's webbrowser module
-        
         webbrowser.open("https://www.youtube.com")
 
 def close_window(title_keyword: str) -> bool:
-    """Try to close a window by its title. Returns True if closed, False if not found."""
     try:
         windows = gw.getWindowsWithTitle(title_keyword)
         if windows:
@@ -46,52 +37,40 @@ class MegaAssistant:
         self.root.geometry("700x600")
         self.root.minsize(600, 500)
 
-        # ✅ define variables first
         self.assistant_active = False
         self.timeout_seconds = 30
         self.api_key = "a713b7ad6da355d37d56b7547fccbde3"
 
-        # Settings variables
         self.current_theme = "dark"
         self.zoom_level = 1.0
-        self.view_mode = "desktop"  # desktop or phone
+        self.view_mode = "desktop"
 
-        # Configure grid
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(1, weight=1)
 
-        # Build UI and voice
         self.setup_ui()
         self.setup_voice()
 
-        # ✅ apply zoom AFTER UI exists
         self.apply_zoom()
         
         self.opened_processes ={}
-        # Start wake word listener
         threading.Thread(target=self.listen_for_wake_word, daemon=True).start()
 
     def setup_ui(self):
-        # === HEADER SECTION ===
         self.header_frame = ctk.CTkFrame(self.root, height=80, corner_radius=15)
         self.header_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
         self.header_frame.grid_columnconfigure(1, weight=1)
 
-        # Logo/Icon replaced with image
         self.logo_frame = ctk.CTkFrame(self.header_frame, width=60, height=60, corner_radius=30)
         self.logo_frame.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-        # ---- LOAD YOUR LOGO IMAGE HERE ----
-        # Put the PNG in your assets folder:  D:\Voice assistant(Mega)\assets\mega_logo.png
-        # Use absolute path below or relative path if script in same folder:
-        logo_path = r"D:\Mega Assistant\assets\mega_logo.png"  # <-- change if needed
+        logo_path = r"D:\Mega Assistant\assets\mega_logo.png"
         self.logo_image = ctk.CTkImage(light_image=Image.open(logo_path),
                                        dark_image=Image.open(logo_path),
                                        size=(60, 60))
         self.logo_label = ctk.CTkLabel(self.logo_frame, image=self.logo_image, text="")
         self.logo_label.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Title and subtitle
         self.title_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.title_frame.grid(row=0, column=1, sticky="ew", padx=10)
 
@@ -103,13 +82,11 @@ class MegaAssistant:
                                           font=("Arial", 14), text_color="lightgray")
         self.subtitle_label.pack(anchor="w")
 
-        # === MAIN CONTENT AREA ===
         self.main_frame = ctk.CTkFrame(self.root, corner_radius=15)
         self.main_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_rowconfigure(1, weight=1)
 
-        # Status bar
         self.status_frame = ctk.CTkFrame(self.main_frame, height=60, corner_radius=10)
         self.status_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=15)
         self.status_frame.grid_columnconfigure(1, weight=1)
@@ -135,7 +112,6 @@ class MegaAssistant:
         self.progress.grid(row=0, column=2, padx=15, pady=20, sticky="e")
         self.progress.set(0)
 
-        # === CHAT/LOG AREA ===
         self.chat_frame = ctk.CTkFrame(self.main_frame, corner_radius=10)
         self.chat_frame.grid(row=1, column=0, sticky="nsew", padx=15, pady=(0, 15))
         self.chat_frame.grid_columnconfigure(0, weight=1)
@@ -162,7 +138,6 @@ class MegaAssistant:
         self.text_widget.grid(row=0, column=0, sticky="nsew")
         self.text_widget.configure(state="disabled")
 
-        # === CONTROL BUTTONS ===
         self.control_frame = ctk.CTkFrame(self.root, height=60, corner_radius=15)
         self.control_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 20))
 
@@ -181,29 +156,24 @@ class MegaAssistant:
     def setup_voice(self):
         self.r = sr.Recognizer()
         
-        # Improved recognizer settings for better performance
         self.r.dynamic_energy_threshold = True
-        self.r.energy_threshold = 300  # Adjust based on your environment
-        self.r.pause_threshold = 0.8   # Seconds of silence before considering phrase complete
-        self.r.phrase_threshold = 0.3  # Minimum seconds of speaking audio before we consider it a phrase
-        self.r.non_speaking_duration = 0.8  # Seconds of non-speaking audio to keep on both sides
+        self.r.energy_threshold = 300
+        self.r.pause_threshold = 0.8
+        self.r.phrase_threshold = 0.3
+        self.r.non_speaking_duration = 0.8
         
-        # Initialize microphone
         try:
-            # Test microphone
             with sr.Microphone() as source:
                 self.r.adjust_for_ambient_noise(source, duration=1)
             self.add_message("Microphone initialized successfully!", "system", speak=False)
         except Exception as e:
             self.add_message(f"Microphone initialization failed: {e}", "system", speak=False)
             
-        # Initialize text-to-speech
         try:
             self.engine = pyttsx3.init()
             self.engine.setProperty('rate', 180)
             voices = self.engine.getProperty('voices')
             if voices:
-                # Try to set a better voice if available
                 self.engine.setProperty('voice', voices[0].id)
         except Exception as e:
             self.add_message(f"TTS initialization failed: {e}", "system", speak=False)
@@ -230,7 +200,6 @@ class MegaAssistant:
         }
 
     def add_message(self, text, sender="mega", speak=True):
-        """Add message to chat with timestamp and formatting"""
         timestamp = datetime.now().strftime("%H:%M:%S")
         
         if sender == "user":
@@ -239,7 +208,7 @@ class MegaAssistant:
         elif sender == "system":
             formatted_msg = f"[{timestamp}] ⚡ System: {text}\n"
             color = "#ff9500"
-        else:  # mega
+        else:
             formatted_msg = f"[{timestamp}] 🤖 Mega: {text}\n"
             color = "#00d4aa"
         
@@ -253,7 +222,6 @@ class MegaAssistant:
                            daemon=True).start()
 
     def update_status(self, icon, text, detail="", progress_mode="determinate"):
-        """Update status with smooth animations"""
         def update():
             self.status_icon.configure(text=icon)
             self.status_label.configure(text=text)
@@ -279,13 +247,11 @@ class MegaAssistant:
         if not self.assistant_active:
             self.add_message("Mega manually activated! Ready for commands.", "system")
             self.update_status("✅", "Mega is awake", "Listening for commands...", "reset")
-            # Start listening immediately in a separate thread
             threading.Thread(target=self.manual_command_mode, daemon=True).start()
         else:
             self.add_message("Mega is already awake!", "system", speak=False)
 
     def manual_command_mode(self):
-        """Special mode for manual activation - takes one command then goes back to sleep"""
         self.assistant_active = True
         cmd = self.take_command_blocking()
         
@@ -300,7 +266,6 @@ class MegaAssistant:
                 self.add_message(f"I don't know how to do that. Searching Google for '{cmd}'")
                 webbrowser.open(f"https://www.google.com/search?q={cmd}")
             
-            # Auto sleep after command unless user says otherwise
             self.add_message("Command completed. Going back to sleep...")
             self.assistant_active = False
             self.update_status("💤", "Idle", "Say 'Hey Mega' to wake up", "reset")
@@ -309,19 +274,16 @@ class MegaAssistant:
             self.update_status("💤", "Idle", "Say 'Hey Mega' to wake up", "reset")
 
     def open_settings(self):
-        """Open settings window"""
         settings_window = ctk.CTkToplevel(self.root)
         settings_window.title("⚙️ Mega Settings")
         settings_window.geometry("400x350")
         settings_window.transient(self.root)
         settings_window.grab_set()
         
-        # Settings header
         header = ctk.CTkLabel(settings_window, text="⚙️ MEGA SETTINGS", 
                              font=("Arial", 20, "bold"))
         header.pack(pady=20)
         
-        # Theme settings
         theme_frame = ctk.CTkFrame(settings_window)
         theme_frame.pack(fill="x", padx=20, pady=10)
         
@@ -332,7 +294,6 @@ class MegaAssistant:
                                       variable=theme_var, command=self.change_theme)
         theme_menu.pack(padx=10, pady=(0,10), anchor="w")
         
-        # Zoom settings
         zoom_frame = ctk.CTkFrame(settings_window)
         zoom_frame.pack(fill="x", padx=20, pady=10)
         
@@ -343,7 +304,6 @@ class MegaAssistant:
                                      variable=zoom_var, command=self.change_zoom)
         zoom_menu.pack(padx=10, pady=(0,10), anchor="w")
         
-        # View mode settings
         view_frame = ctk.CTkFrame(settings_window)
         view_frame.pack(fill="x", padx=20, pady=10)
         
@@ -354,48 +314,39 @@ class MegaAssistant:
                                      variable=view_var, command=self.change_view_mode)
         view_menu.pack(padx=10, pady=(0,10), anchor="w")
         
-        # Close button
         close_btn = ctk.CTkButton(settings_window, text="✅ Apply & Close", 
                                  command=settings_window.destroy, height=35)
         close_btn.pack(pady=20)
 
     def change_theme(self, theme):
-        """Change application theme"""
         self.current_theme = theme
         ctk.set_appearance_mode(theme)
         self.add_message(f"Theme changed to {theme} mode", "system", speak=False)
 
     def change_zoom(self, zoom_str):
-        """Change zoom level"""
         zoom_value = int(zoom_str.replace("%", "")) / 100
         self.zoom_level = zoom_value
         
-        # Apply zoom to fonts
         self.apply_zoom()
         self.add_message(f"Zoom level changed to {zoom_str}", "system", speak=False)
 
     def apply_zoom(self):
-        """Apply zoom to all UI elements"""
         base_title_size = 28
         base_status_size = 18
         base_detail_size = 13
         base_chat_size = 13
         
-        # Update fonts based on zoom level
         self.title_label.configure(font=("Arial", int(base_title_size * self.zoom_level), "bold"))
         self.status_label.configure(font=("Arial", int(base_status_size * self.zoom_level), "bold"))
         self.status_detail.configure(font=("Arial", int(base_detail_size * self.zoom_level)))
         self.text_widget.configure(font=("Consolas", int(base_chat_size * self.zoom_level)))
 
     def change_view_mode(self, mode):
-        """Change view mode between desktop and phone"""
         self.view_mode = mode
         if mode == "phone":
-            # Phone mode - compact layout
             self.root.geometry("350x500")
             self.root.minsize(300, 400)
         else:
-            # Desktop mode - full layout
             self.root.geometry("700x600")
             self.root.minsize(600, 500)
         
@@ -405,7 +356,6 @@ class MegaAssistant:
         self.update_status("🎤", "Listening...", "Speak now", "indeterminate")
         try:
             with sr.Microphone() as source:
-                # Listen for longer and adjust settings for better recognition
                 audio = self.r.listen(source, timeout=5, phrase_time_limit=6)
         except sr.WaitTimeoutError:
             self.add_message("No speech detected - timeout", "system", speak=False)
@@ -435,10 +385,8 @@ class MegaAssistant:
         return match if score > 60 else None
 
     def handle_command(self, cmd: str) -> bool:
-        """Take a text command and perform the appropriate action"""
         cmd = cmd.lower()
 
-    # --- CLOSE COMMANDS ---
         if cmd.startswith("close "):
             app_name = cmd.replace("close ", "", 1).strip()
             best = self.find_best_match(app_name, self.apps.keys())
@@ -461,7 +409,6 @@ class MegaAssistant:
                 self.add_message(f"I couldn't find an app named {app_name} to close.")
                 return True
 
-        # --- Spotify ---
         if "spotify" in cmd:
             self.add_message("Opening Spotify...")
             try:
@@ -478,7 +425,6 @@ class MegaAssistant:
                 webbrowser.open("https://open.spotify.com/")
             return True
 
-        # --- WhatsApp ---
         if "whatsapp" in cmd:
             self.add_message("Opening WhatsApp...")
             try:
@@ -488,15 +434,13 @@ class MegaAssistant:
                 webbrowser.open("https://web.whatsapp.com")
             return True
 
-        # --- Time ---
         if "time" in cmd:
             now = datetime.now()
             self.add_message(f"The current time is {now.strftime('%H:%M:%S')}")
             return True
 
-        # --- Weather ---
         if "weather" in cmd:
-            city = "Pune"  # default
+            city = "Pune"
             parts = cmd.split()
             for i, word in enumerate(parts):
                 if word.lower() == "in" and i + 1 < len(parts):
@@ -515,13 +459,11 @@ class MegaAssistant:
                 self.add_message("Failed to get weather information. Check your internet connection.")
             return True
 
-        # --- YouTube ---
         if "youtube" in cmd:
             self.add_message("Opening YouTube…")
             open_youtube()
             return True
 
-        # --- Google search ---
         if cmd.startswith("google "):
             query = cmd.replace("google ", "", 1).strip()
             if query:
@@ -532,7 +474,6 @@ class MegaAssistant:
                 webbrowser.open("https://www.google.com")
             return True
 
-        # --- Other apps ---
         best = self.find_best_match(cmd, self.apps.keys())
         if best:
             self.add_message(f"Opening {best}")
@@ -540,27 +481,23 @@ class MegaAssistant:
                 proc = subprocess.Popen(self.apps[best], shell=True)
                 self.opened_processes[best] = proc
             except Exception:
-                # fallback: if app entry is 'web' open its web page
                 if best == "youtube":
                     open_youtube()
                 else:
                     webbrowser.open(f"https://www.google.com/search?q={best}")
             return True
         
-        # --- Close Control Panel ---
         if "close control panel" in cmd:
             if not close_window("Control Panel"):
                 subprocess.run("taskkill /f /im control.exe", shell=True)
             self.add_message("Closed Control Panel.")
             return True
 
-        # --- Close Settings ---
         if "close settings" in cmd:
             if not close_window("Settings"):
                 subprocess.run("taskkill /f /im SystemSettings.exe", shell=True)
             self.add_message("Closed Settings.")
             return True
-
 
         return False
 
@@ -584,7 +521,6 @@ class MegaAssistant:
                 webbrowser.open(f"https://www.google.com/search?q={cmd}")
 
     def listen_for_wake_word(self):
-        # Adjust for ambient noise once at startup
         try:
             with sr.Microphone() as source:
                 self.r.adjust_for_ambient_noise(source, duration=1.0)
@@ -594,7 +530,6 @@ class MegaAssistant:
         while True:
             if not self.assistant_active:
                 try:
-                    # Listen for wake word
                     with sr.Microphone() as source:
                         audio = self.r.listen(source, timeout=1, phrase_time_limit=3)
                     text = self.r.recognize_google(audio).lower()
@@ -604,17 +539,16 @@ class MegaAssistant:
                         threading.Thread(target=self.run_assistant_loop, daemon=True).start()
                         
                 except sr.WaitTimeoutError:
-                    pass  # Normal timeout, continue listening
+                    pass
                 except sr.UnknownValueError:
-                    pass  # Couldn't understand, continue listening
+                    pass
                 except sr.RequestError as e:
                     self.add_message(f"Speech service error: {e}", "system", speak=False)
-                    time.sleep(5)  # Wait before retrying
+                    time.sleep(5)
                 except Exception as e:
                     self.add_message(f"Microphone error: {e}", "system", speak=False)
                     time.sleep(2)
             else:
-                # When assistant is active, sleep longer to avoid interference
                 time.sleep(0.5)
 
     def run(self):
