@@ -66,6 +66,19 @@ To test the Voice Assistant Project, follow these steps:
 Screenshot of the GUI -![Mega_GUI](screenshot/Mega_GUI.png)
 Screenshot of the virtual assistant in action -![Mega_in_action](screenshot/Mega_in_action.png)
 
+🎨 Assets
+---------
+- The project logo was created by me using **Canva AI**.
+
+🔮 Future Plans
+---------------
+We plan to extend the Voice Assistant Project with the following features:
+
+1. **RAG-based Chatbot**: Integrate a retrieval-augmented chatbot so users can have more natural and context-aware conversations.
+2. **App Control via Voice**: Allow users to open, close, or switch between applications using simple voice commands.
+3. **Task Automation**: Add reminders, alarms, and scheduling support through voice interaction.
+4. **Smarter Context Handling**: Improve the assistant’s ability to remember previous interactions for smoother conversations.
+
 📦 API Reference
 ----------------
 The Voice Assistant Project provides an API for integrating with external services and applications.
