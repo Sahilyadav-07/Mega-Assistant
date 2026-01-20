@@ -61,6 +61,18 @@ To test the Voice Assistant Project, follow these steps:
 2. **Integration Testing**: Run the `mega_code.py` file to test the core logic and functionality of the virtual assistant.
 3. **User Acceptance Testing**: Interact with the virtual assistant through the GUI or voice commands to test its functionality and responsiveness.
 
+🎥 Demo Video
+---------------
+▶️ Watch the project demo here:
+👉 https://youtu.be/PysNCUGK-As
+
+📌 In this demo, you can see:
+
+1. GUI-based interaction using customtkinter
+2. Voice command input via microphone
+3. Real-time assistant responses (speech + actions)
+4. Overall workflow of the Mega Voice Assistant
+
 📸 Screenshots
 ---------------
 Screenshot of the GUI -![Mega_GUI](screenshot/Mega_GUI.png)
